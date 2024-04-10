@@ -11,7 +11,7 @@ export const loadQuestions = () => {
   return async (dispatch) => {
     try {
       console.log("load questions")
-      const response = await axios.get(baseApiUrl+'/api/questions');
+      const response = await axios.get(baseApiUrl + '/api/questions');
       dispatch({
         type: ActionTypes.LOAD_QUESTIONS,
         payload: response.data,
@@ -41,13 +41,13 @@ export const saveQuestion = (question) => {
   };
 };
 
-export const editQuestion = (id, updatedQuestion) => {
+export const updateQuestion = (updatedQuestion) => {
   return async (dispatch) => {
     try {
-      await axios.put(baseApiUrl + `/api/questions/${id}`, updatedQuestion);
+      await axios.put(baseApiUrl + `/api/questions/${updatedQuestion.id}`, updatedQuestion);
       dispatch({
         type: ActionTypes.EDIT_QUESTION,
-        payload: { id, updatedQuestion },
+        payload: { id: updatedQuestion.id, updatedQuestion },
       });
     } catch (error) {
       console.error('Error editing question:', error);
@@ -65,20 +65,6 @@ export const deleteQuestion = (id) => {
       });
     } catch (error) {
       console.error('Error deleting question:', error);
-    }
-  };
-};
-
-export const saveQuestionNotes = (id, notes) => {
-  return async (dispatch) => {
-    try {
-      await axios.put(baseApiUrl + `/api/questions/${id}`, { notes });
-      dispatch({
-        type: ActionTypes.SAVE_QUESTION_NOTES,
-        payload: { id, notes },
-      });
-    } catch (error) {
-      console.error('Error saving question notes:', error);
     }
   };
 };

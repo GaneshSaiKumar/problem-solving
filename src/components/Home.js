@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { editQuestion, loadQuestions } from '../redux/actions';
+import { deleteQuestion, loadQuestions } from '../redux/actions';
 import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 
 function Home() {
   const dispatch = useDispatch();
@@ -11,21 +13,17 @@ function Home() {
     dispatch(loadQuestions());
   }, [dispatch]); // Include dispatch in the dependency array
 
-
-  const handleEdit = (id) => {
-    const updatedQuestion = { ...questions, title: 'Updated Title', answer: 'Updated Answer' }; // Update with your form values
-    dispatch(editQuestion(id, updatedQuestion));
-  };
-
   const handleDelete = (id) => {
-    // Add delete logic here
-    console.log('Delete question with ID:', id);
+    // if (window.confirm('Are you sure you want to delete this question?')) {
+      dispatch(deleteQuestion(id));
+    // }
   };
 
   return (
-    <div>
-      <h1>Question List</h1>
-      <table>
+    <div style={containerStyle}>
+      <h1 style={headerStyle}>Question List</h1>
+      <hr />
+      <table className="table">
         <thead>
           <tr>
             <th>Question</th>
@@ -39,9 +37,17 @@ function Home() {
               <td>{question.title}</td>
               <td>{question.answer}</td>
               <td>
-                <Link to={`/question/${question.id}`}>View</Link>
-                <button onClick={() => handleEdit(question.id)}>Edit</button>
-                <button onClick={() => handleDelete(question.id)}>Delete</button>
+                <Link to={`/question/${question.id}`}>
+                  <FontAwesomeIcon icon={faEye} style={iconStyle} />
+                </Link>
+                <Link to={`/question/${question.id}/edit`}>
+                  <FontAwesomeIcon icon={faEdit} style={iconStyle} />
+                </Link>
+                <FontAwesomeIcon
+                  icon={faTrashAlt}
+                  style={iconStyle}
+                  onClick={() => handleDelete(question.id)}
+                />
               </td>
             </tr>
           ))}
@@ -50,5 +56,21 @@ function Home() {
     </div>
   );
 }
+
+const containerStyle = {
+  maxWidth: '800px',
+  margin: 'auto',
+  padding: '20px',
+};
+
+const headerStyle = {
+  textAlign: 'center',
+  marginBottom: '20px',
+};
+
+const iconStyle = {
+  marginRight: '10px',
+  cursor: 'pointer',
+};
 
 export default Home;

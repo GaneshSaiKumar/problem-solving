@@ -53,25 +53,36 @@ app.get('/api/questions', (req, res) => {
 
 // Save question to CSV
 app.post('/api/questions', (req, res) => {
-  const { id, title, answer } = req.body;
+  const { id, title, answer, notes } = req.body;
   try {
-    fs.appendFileSync(filePath, `${id},${title},${answer}\n`);
-    res.sendStatus(200);
+  if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, 'id,title,answer,notes\n');
+    }
+    let csv = json2csv([{ id, title, answer, notes }], { fields: ['id', 'title', 'answer', 'notes'] });
+    let res = csv.split('\n')
+    res.splice(0,1)
+    csv = res.join(`
+    `)
+    console.log(csv, "====", req.body)
+    fs.appendFileSync(filePath, `${csv}\n`);
   } catch (error) {
     console.error('Error saving question:', error);
+    res.sendStatus(400,error)
   }
+  initialQuestions.push({ id, title, answer, notes });
+  res.sendStatus(200);
 });
 
 
 app.put('/api/questions/:id', (req, res) => {
   const { id } = req.params;
-  const { notes } = req.body;
+  const { title, answer, notes } = req.body;
   const questionIndex = initialQuestions.findIndex((q) => q.id === id);
   console.log(id, notes, initialQuestions, questionIndex)
   if (questionIndex !== -1) {
-    initialQuestions[questionIndex].notes = notes;
+    initialQuestions[questionIndex] = { ...initialQuestions[questionIndex], notes, title, answer };
     const csv = json2csv(initialQuestions, { fields: ['id', 'title', 'answer', 'notes'] });
-    fs.writeFile(filename, csv, (err) => {
+    fs.writeFile(filename, `${csv}\n`, (err) => {
       if (err) {
         console.error('Error saving notes:', err);
         res.status(500).json({ error: 'Error saving notes' });
@@ -84,28 +95,21 @@ app.put('/api/questions/:id', (req, res) => {
   }
 });
 
-// Delete question from CSV
+
 app.delete('/api/questions/:id', (req, res) => {
   const { id } = req.params;
+  const questionIndex = initialQuestions.findIndex(q => q.id === id);
 
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error deleting question:', err);
-      res.status(500).send('Error deleting question');
-    } else {
-      const lines = data.split('\n');
-      lines.splice(id, 1);
-
-      fs.writeFile(filePath, lines.join('\n'), (err) => {
-        if (err) {
-          console.error('Error deleting question:', err);
-          res.status(500).send('Error deleting question');
-        } else {
-          res.sendStatus(200);
-        }
-      });
-    }
+  if (questionIndex === -1) {
+    return res.status(404).json({ message: 'Question not found' });
+  }
+  initialQuestions.splice(questionIndex, 1);
+  fs.writeFileSync(filePath, 'id,title,answer,notes\n');
+  initialQuestions.forEach(q => {
+    fs.appendFileSync(filePath, `"${q.id}","${q.title}","${q.answer}","${q.notes}"\n`);
   });
+
+  res.json({ message: 'Question deleted successfully' });
 });
 
 
